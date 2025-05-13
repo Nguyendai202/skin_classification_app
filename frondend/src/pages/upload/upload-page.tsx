@@ -1,23 +1,40 @@
-import { Button, Col, Flex, Image, Modal, Progress, Row, Spin } from "antd";
+import {
+  Button,
+  Col,
+  Flex,
+  Image,
+  Modal,
+  Progress,
+  Row,
+  Select,
+  Spin,
+} from "antd";
 import { useState } from "react";
-import { useUploadImages } from "../../app/loader";
+import { useUploadAutism, useUploadImages } from "../../app/loader";
 import "./upload.css";
 const UploadPage = () => {
   const defaultImage =
     "https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg";
   const [fileImage, setFileImage] = useState<File | null>(null);
   const [imagePath, setImagePath] = useState<string>(defaultImage);
+  const [taskType, setTaskType] = useState("skin");
   const {
     mutate: mutateUploadImages,
     data: data,
     isLoading,
   } = useUploadImages();
+
+  const {
+    mutate: mutateUploadAuthism,
+    data: dataAuthism,
+    isLoading: isLoadingAuthism,
+  } = useUploadAutism();
   const handleUploadImage = (event: any) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const img = new (window.Image as { new(): HTMLImageElement })();
+        const img = new (window.Image as { new (): HTMLImageElement })();
         img.src = e.target?.result as string;
         img.onload = () => {
           // Tạo canvas để resize ảnh
@@ -49,7 +66,11 @@ const UploadPage = () => {
     if (fileImage) {
       const formData = new FormData();
       formData.append("files", fileImage);
-      mutateUploadImages(formData);
+      if (taskType === "skin") {
+        mutateUploadImages(formData);
+      } else {
+        mutateUploadAuthism(formData);
+      }
     }
   };
   const handleClickClear = () => {
@@ -72,11 +93,13 @@ const UploadPage = () => {
         return "Melanocytic nevi";
       case "vasc":
         return "Vascular lesions";
+      case "Autistic":
+        return "Autistic";
       default:
         return "Unknown label";
     }
   };
-  const labels = [
+  const skinLabels = [
     { key: "akiec", name: "AKIEC" },
     { key: "bcc", name: "BCC" },
     { key: "bkl", name: "BKL" },
@@ -85,6 +108,12 @@ const UploadPage = () => {
     { key: "nv", name: "NV" },
     { key: "vasc", name: "VASC" },
   ];
+  const autismLabels = [
+    { key: "Non-Autistic", name: "Non-Autistic" },
+    { key: "Autistic", name: "Autistic" },
+  ];
+  const currentLabels = taskType === "skin" ? skinLabels : autismLabels;
+  const currentData = taskType === "skin" ? data : dataAuthism;
   return (
     <div className="container mx-auto p-4">
       <h3
@@ -95,7 +124,7 @@ const UploadPage = () => {
           textAlign: "center",
         }}
       >
-        ỨNG DỤNG PHÂN LOẠI TỔN THƯƠNG DA
+        ỨNG DỤNG PHÂN LOẠI TỔN THƯƠNG DA & TỰ KỈ
       </h3>
       <Row
         justify="center"
@@ -167,6 +196,15 @@ const UploadPage = () => {
                 gap: "16px",
               }}
             >
+              <Select
+                value={taskType}
+                onChange={(value) => setTaskType(value)}
+                style={{ width: "100%", marginBottom: "16px" }}
+                options={[
+                  { label: "Tổn thương da", value: "skin" },
+                  { label: "Tự kỉ", value: "autism" },
+                ]}
+              />
               <Button
                 type="dashed"
                 onClick={handleClickClear}
@@ -181,7 +219,7 @@ const UploadPage = () => {
           </div>
 
           {/* Ảnh gradcam nhỏ */}
-          {data?.results?.image?.gradcam_image && (
+          {currentData?.results?.image?.gradcam_image && (
             <div
               style={{
                 display: "flex",
@@ -195,7 +233,7 @@ const UploadPage = () => {
                 height="150px"
                 alt="Uploaded image preview"
                 style={{ margin: "0 auto" }}
-                src={`data:image/jpeg;base64,${data?.results?.image?.gradcam_image}`}
+                src={`data:image/jpeg;base64,${currentData?.results?.image?.gradcam_image}`}
               />
             </div>
           )}
@@ -204,17 +242,17 @@ const UploadPage = () => {
         {/* Cột kết quả - Responsive */}
         <Col xs={24} md={10} className="w-full" style={{ marginTop: "20px" }}>
           <h2 className="text-center text-xl font-bold mb-4">
-            Kết quả dự đoán: {getLabelText(data?.results?.image?.label)}
+            Kết quả dự đoán: {getLabelText(currentData?.results?.image?.label)}
           </h2>
 
           <Flex vertical gap="small" className="w-full">
-            {labels.map((label) => (
+            {currentLabels.map((label) => (
               <Flex key={label.key} align="center" className="w-full">
                 <div className="w-16 mr-2" style={{ width: "60px" }}>
                   {label.name}:
                 </div>
                 <Progress
-                  percent={data?.results.image?.probabilities[label.key]}
+                  percent={currentData?.results.image?.probabilities[label.key]}
                   className="flex-1"
                 />
               </Flex>
@@ -225,7 +263,7 @@ const UploadPage = () => {
 
       {/* Modal loading */}
       <Modal
-        open={isLoading}
+        open={isLoading || isLoadingAuthism}
         footer={null}
         width={200}
         closable={false}

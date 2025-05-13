@@ -80,3 +80,13 @@ export const uploadImage = async (data: any) => {
   });
   return result.data;
 };
+
+export const uploadAuthism = async (data: any) => {
+  const url = `/upload-autism`;
+  const result = await configAxios3.post(url, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return result.data;
+}

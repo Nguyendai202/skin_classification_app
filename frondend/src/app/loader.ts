@@ -10,6 +10,7 @@ import {
   predictImage,
   savePrediction,
   updateModel,
+  uploadAuthism,
   uploadImage,
 } from "./index.service";
 import { message } from "antd";
@@ -137,6 +138,24 @@ export const useUploadImages = () => {
   return useMutation(
     (data: any) => {
       return uploadImage(data);
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(CACHE_KEYS.upload);
+        message.success("Upload hình anh thành cong!");
+      },
+      onError: () => {
+        message.error("Upload hình anh thất bại!");
+      },
+    }
+  );
+}
+
+export const useUploadAutism = () => {
+  const queryClient = useQueryClient();
+  return useMutation(
+    (data: any) => {
+      return uploadAuthism(data);
     },
     {
       onSuccess: () => {
