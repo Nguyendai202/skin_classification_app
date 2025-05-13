@@ -208,7 +208,7 @@ const UploadPage = () => {
               <Button
                 type="dashed"
                 onClick={handleClickClear}
-                style={{ marginRight: "16px" }}
+                style={{ marginRight: "0px" }}
               >
                 Xóa
               </Button>
@@ -248,7 +248,7 @@ const UploadPage = () => {
           <Flex vertical gap="small" className="w-full">
             {currentLabels.map((label) => (
               <Flex key={label.key} align="center" className="w-full">
-                <div className="w-16 mr-2" style={{ width: "60px" }}>
+                <div className="w-16 mr-2" style={{ width: "110px" }}>
                   {label.name}:
                 </div>
                 <Progress
